@@ -5,44 +5,47 @@
 </style>
 <script>
 (() => {
-  window.requirejs(["plotly"], (Plotly) => {
-    function bindInteractivePlotlySliders() {
-      document.querySelectorAll(".plotly-graph-div").forEach((plot) => {
-        const config = plot.layout?.meta?.interactive_plot;
-        if (!config) return;
-        plot.classList.toggle(
-          "hide-slider-tick-labels",
-          config.show_slider_tick_labels === false
+  const Plotly = window.Plotly;
+  if (!Plotly) {
+    throw new Error("The interactive plot slider handler requires Plotly.js.");
+  }
+
+  function bindInteractivePlotlySliders() {
+    document.querySelectorAll(".plotly-graph-div").forEach((plot) => {
+      const config = plot.layout?.meta?.interactive_plot;
+      if (!config) return;
+      plot.classList.toggle(
+        "hide-slider-tick-labels",
+        config.show_slider_tick_labels === false
+      );
+      if (plot.__interactivePlotBound) return;
+
+      const selected = config.initial_indices.slice();
+      plot.on("plotly_sliderchange", (event) => {
+        const sliderIndex = config.slider_names.indexOf(event.slider?.name);
+        const valueIndex = Number(event.step?.value);
+        if (sliderIndex < 0 || !Number.isInteger(valueIndex)) return;
+
+        selected[sliderIndex] = valueIndex;
+        const curveIndex = selected.reduce(
+          (index, value, i) => index * config.value_counts[i] + value,
+          0
         );
-        if (plot.__interactivePlotBound) return;
-
-        const selected = config.initial_indices.slice();
-        plot.on("plotly_sliderchange", (event) => {
-          const sliderIndex = config.slider_names.indexOf(event.slider?.name);
-          const valueIndex = Number(event.step?.value);
-          if (sliderIndex < 0 || !Number.isInteger(valueIndex)) return;
-
-          selected[sliderIndex] = valueIndex;
-          const curveIndex = selected.reduce(
-            (index, value, i) => index * config.value_counts[i] + value,
-            0
-          );
-          Plotly.restyle(
-            plot,
-            { y: config.curves[curveIndex] },
-            config.trace_indices
-          );
-        });
-        plot.__interactivePlotBound = true;
+        Plotly.restyle(
+          plot,
+          { y: config.curves[curveIndex] },
+          config.trace_indices
+        );
       });
-    }
-
-    const observer = new MutationObserver(bindInteractivePlotlySliders);
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
+      plot.__interactivePlotBound = true;
     });
-    bindInteractivePlotlySliders();
+  }
+
+  const observer = new MutationObserver(bindInteractivePlotlySliders);
+  observer.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
   });
+  bindInteractivePlotlySliders();
 })();
 </script>
