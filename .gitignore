@@ -6,3 +6,6 @@ __pycache__/
 *_files/
 plot.html
 main.html
+
+/.quarto/
+**/*.quarto_ipynb
