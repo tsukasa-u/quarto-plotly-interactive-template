@@ -1,0 +1,8 @@
+.jupyter_cache/
+.quarto/
+_freeze/
+__pycache__/
+.venv/
+*_files/
+plot.html
+main.html

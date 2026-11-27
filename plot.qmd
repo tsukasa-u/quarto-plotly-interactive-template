@@ -1,0 +1,99 @@
+---
+title: "Plots Demo"
+author: "Hideyuki Oguri"
+date: "2026/11/27"
+execute:
+    cache: false
+    daemon: true
+    freeze: auto
+editor:
+    render-on-save: true
+format:
+    html:
+        # toc: true
+        html-math-method: katex
+        include-after-body: plotly_slider.html
+        # embed-resources: true
+jupyter: python3
+---
+### Parametric Plots
+
+`interactive_plot` accepts any number of named numeric parameters. Plotly creates
+the graph and native sliders; the shared Plotly.js handler combines their
+selections in the rendered HTML. The reusable Python helper is in
+`interactive_plot.py`, and the HTML bridge is included from `plotly_slider.html`.
+All parameter combinations are precomputed,
+so the HTML size grows with the number of slider values, x points, and plotted
+series. Pass all series in `plots`; each entry contains a plotting `func`, a
+legend `name`, and an optional `"yaxis": "y2"` for the secondary vertical axis.
+All series receive the same slider parameters. The secondary-axis zero line is
+disabled so it cannot cover the primary zero line. Use `x_range`, `y_range`,
+and `y2_range` to fix axis limits, and `show_legend=False` to hide the legend. Pass
+Plotly layout options with `legend`; for example,
+`legend={"x": 0.02, "y": 0.98, "xanchor": "left", "yanchor": "top"}` places it
+inside the upper-left corner. Set `show_slider_tick_labels=False` to hide the
+numeric labels beneath the sliders while keeping the selected-value display.
+
+#### Reusable helper
+
+```{python}
+#| echo: false
+#| output: false
+
+import numpy as np
+from interactive_plot import interactive_plot
+```
+
+#### Graph-specific configuration
+
+```{python}
+#| label: fig-parametric
+#| fig-cap: "Parametric Plots"
+#| echo: false
+
+def sine_wave(x, frequency, amplitude):
+    return amplitude * np.sin(x * frequency)
+
+
+def cosine_wave(x, frequency, amplitude):
+    return 100 * amplitude * np.cos(x * frequency)
+
+
+x = np.arange(0, 10, 0.01)
+fig = interactive_plot(
+    plots=[
+        {"func": sine_wave, "name": "Sine", "yaxis": "y"},
+        {"func": cosine_wave, "name": "Cosine", "yaxis": "y2"},
+    ],
+    x=x,
+    sliders={
+        "frequency": {
+            "min": 1,
+            "max": 20,
+            "step": 1,
+            "value": 10,
+            "label": "Frequency",
+            "unit": "Hz"
+        },
+        "amplitude": {
+            "min": 0.5,
+            "max": 2.0,
+            "step": 0.5,
+            "value": 1.0,
+            "label": "Amplitude",
+            "unit": "V"
+        },
+    },
+    title="Sine Wave",
+    x_label="Time (s)",
+    y_label="Amplitude (V)",
+    x_range=(-0.5, 10.5),
+    y_range=(-2.1, 2.1),
+    y2_label="Cosine Amplitude",
+    y2_range=(-210, 210),
+    show_legend=True,
+    legend={"x": 0.02, "y": 0.98, "xanchor": "left", "yanchor": "top"},
+    show_slider_tick_labels=True,
+)
+fig.show()
+```
